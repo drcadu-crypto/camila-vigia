@@ -1,0 +1,29 @@
+name: Vigia Camila
+
+on:
+  schedule:
+    - cron: '*/5 * * * *'    # batimento: a cada 5 min (UTC; pode atrasar alguns min)
+    - cron: '0 11 * * *'     # resumo verde diário: 11h UTC = 08h BRT
+  workflow_dispatch:
+    inputs:
+      mode:
+        description: 'check ou daily'
+        default: 'check'
+
+concurrency:
+  group: vigia-camila
+  cancel-in-progress: false
+
+jobs:
+  vigia:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Checar Camila
+        env:
+          VIGIA_URL: ${{ secrets.VIGIA_URL }}
+          VIGIA_TG_TOKEN: ${{ secrets.VIGIA_TG_TOKEN }}
+          VIGIA_TG_CHAT: ${{ secrets.VIGIA_TG_CHAT }}
+          # 'daily' no cron das 11h UTC, senão 'check'. Manual usa o input.
+          VIGIA_MODE: ${{ github.event.schedule == '0 11 * * *' && 'daily' || (github.event.inputs.mode || 'check') }}
+        run: bash check.sh
