@@ -15,7 +15,10 @@ MODE="${VIGIA_MODE:-check}"
 # Debounce de falha contínua (defaults => ~90s ininterruptos pra confirmar queda)
 STEP="${VIGIA_STEP_SECS:-15}"     # segundos entre pings
 NEED="${VIGIA_NEED_FAILS:-6}"     # falhas CONSECUTIVAS pra confirmar queda (6*15s = 90s)
-MAXP="${VIGIA_MAX_PINGS:-10}"     # teto de pings por rodada (não estourar o cron de 5min)
+MAXP="${VIGIA_MAX_PINGS:-8}"      # teto de pings por rodada (não estourar o cron de 5min)
+# timeout por ping tem de ficar ACIMA do timeout do nó "Kommo Account" no n8n
+# (20s desde 2026-07-17) — senão abortaríamos um ping lento-porém-ok como falha.
+PTMO="${VIGIA_PING_TIMEOUT:-25}"  # -m por ping (>20s do nó); connect curto p/ falha rápida de rede
 JCONT="$((NEED * STEP))"          # janela contínua exigida, em segundos
 
 tg() { curl -s -m 15 -X POST "https://api.telegram.org/bot${TOK}/sendMessage" \
@@ -27,7 +30,7 @@ is_alive() { [ "$1" = "200" ] && printf '%s' "$2" | grep -qE '"ok"[[:space:]]*:[
 streak=0            # falhas consecutivas até agora
 last_code="000"; last_body=""; pings=0
 while [ "$pings" -lt "$MAXP" ]; do
-  resp=$(curl -s -m 12 -w $'\n%{http_code}' "$URL" 2>/dev/null || printf '\n000')
+  resp=$(curl -s --connect-timeout 8 -m "$PTMO" -w $'\n%{http_code}' "$URL" 2>/dev/null || printf '\n000')
   last_code=$(printf '%s' "$resp" | tail -1)
   last_body=$(printf '%s' "$resp" | sed '$d')
   pings=$((pings + 1))
