@@ -56,8 +56,8 @@ fi
 # Chegou aqui = ~${JCONT}s de falha ININTERRUPTA. Descreve o motivo em linguagem clara.
 if [ "$last_code" != "200" ] || [ -z "$last_body" ]; then
   motivo="o sistema da Camila não respondeu por mais de ${JCONT}s — provável queda do computador de casa ou da internet."
-elif printf '%s' "$last_body" | grep -qE '"kommo"[[:space:]]*:[[:space:]]*false'; then
-  motivo="há mais de ${JCONT}s a Camila está ligada, mas NÃO está conseguindo falar com o sistema de mensagens (Kommo). Os clientes podem não estar recebendo resposta."
+elif printf '%s' "$last_body" | grep -qE '"n8n"[[:space:]]*:[[:space:]]*false'; then
+  motivo="há mais de ${JCONT}s a Camila está ligada, mas o motor de atendimento (n8n) NÃO está respondendo. Os pacientes podem não estar recebendo resposta."
 elif printf '%s' "$last_body" | grep -qE '"redis"[[:space:]]*:[[:space:]]*false'; then
   motivo="a memória de trabalho da Camila está fora do ar há mais de ${JCONT}s."
 else

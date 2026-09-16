@@ -4,11 +4,15 @@ on:
   schedule:
     - cron: '*/5 * * * *'    # batimento: a cada 5 min (UTC; pode atrasar alguns min)
     - cron: '0 11 * * *'     # resumo verde diário: 11h UTC = 08h BRT
+    - cron: '17 12 1 * *'    # keepalive: dia 1 de cada mês (o GitHub desativa cron após 60d sem atividade no repo)
   workflow_dispatch:
     inputs:
       mode:
         description: 'check ou daily'
         default: 'check'
+
+permissions:
+  contents: write
 
 concurrency:
   group: vigia-camila
@@ -16,6 +20,7 @@ concurrency:
 
 jobs:
   vigia:
+    if: github.event.schedule != '17 12 1 * *'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -27,3 +32,18 @@ jobs:
           # 'daily' no cron das 11h UTC, senão 'check'. Manual usa o input.
           VIGIA_MODE: ${{ github.event.schedule == '0 11 * * *' && 'daily' || (github.event.inputs.mode || 'check') }}
         run: bash check.sh
+
+  # Sem atividade no repositório por 60 dias o GitHub DESATIVA os crons e o vigia
+  # fica mudo sem avisar ninguém (aconteceu em 2026-09-16: último commit era 17/07).
+  # Este job faz um commit vazio 1x/mês só para zerar esse relógio.
+  keepalive:
+    if: github.event.schedule == '17 12 1 * *'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Commit vazio para manter os crons ativos
+        run: |
+          git config user.name  'github-actions[bot]'
+          git config user.email 'github-actions[bot]@users.noreply.github.com'
+          git commit --allow-empty -m 'keepalive: mantem os crons do vigia ativos'
+          git push
