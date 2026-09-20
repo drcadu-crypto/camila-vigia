@@ -8,7 +8,10 @@ on:
   workflow_dispatch:
     inputs:
       mode:
-        description: 'check ou daily'
+        # 🛑 `keepalive` aqui NÃO é enfeite: o job só rodava no cron do dia 1, então
+        # ninguém nunca soube se ele funciona — e o dia em que falhar é justamente o
+        # dia em que o vigia fica mudo. Com o dispatch dá para provar antes.
+        description: 'check, daily ou keepalive'
         default: 'check'
 
 permissions:
@@ -20,7 +23,7 @@ concurrency:
 
 jobs:
   vigia:
-    if: github.event.schedule != '17 12 1 * *'
+    if: github.event.schedule != '17 12 1 * *' && github.event.inputs.mode != 'keepalive'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -37,7 +40,7 @@ jobs:
   # fica mudo sem avisar ninguém (aconteceu em 2026-09-16: último commit era 17/07).
   # Este job faz um commit vazio 1x/mês só para zerar esse relógio.
   keepalive:
-    if: github.event.schedule == '17 12 1 * *'
+    if: github.event.schedule == '17 12 1 * *' || github.event.inputs.mode == 'keepalive'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
