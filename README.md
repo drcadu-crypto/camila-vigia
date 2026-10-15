@@ -11,16 +11,16 @@ está no ar e avisa no Telegram quando cai.
 
 ## Alerta fiel (debounce de falha contínua)
 
-A ponte Kommo **oscila por segundos** (o nó de saúde do n8n tem timeout de 10s
-e o caminho casa→Kommo dá picos de latência ~8–11s). Isso não é queda real e o
+A ponte de envio **oscila por segundos** (o nó de saúde do n8n tem timeout
+e o caminho casa→internet dá picos de latência ~8–11s). Isso não é queda real e o
 envio ao paciente não falha nesses blips. Por isso o vigia **só alerta em falha
 ININTERRUPTA**: pinga espaçado e **qualquer recuperação zera o contador**; só
 avisa se ficar caído continuamente por `NEED × STEP` segundos (padrão ~90s).
 Um blip de 25–45s que se recupera sozinho **não** dispara alerta.
 
-O nó `Kommo Account` do n8n tem timeout de **20s** (subido de 10s em 2026-07-17,
-porque picos de latência de 8–11s casa→Kommo estouravam o teto antigo e geravam
-`kommo:false` falso). O `check.sh` pinga com `-m 25` (acima dos 20s do nó) pra
+O nó de saúde do n8n tinha timeout de **20s** (subido de 10s em 2026-07-17,
+porque picos de latência de 8–11s estouravam o teto antigo e geravam
+falso negativo). O `check.sh` pinga com `-m 25` (acima dos 20s do nó) pra
 não abortar um ping lento-porém-ok.
 
 Configuração em Secrets: `VIGIA_URL`, `VIGIA_TG_TOKEN`, `VIGIA_TG_CHAT`.

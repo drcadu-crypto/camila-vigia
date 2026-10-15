@@ -3,9 +3,9 @@
 # Nada sensível aqui: URL e token vêm de variáveis (GitHub Secrets).
 #
 # ALERTA FIEL (2026-07-17): antes bastavam 3 falhas em ~30s pra gritar
-# "clientes sem resposta". Mas a ponte Kommo OSCILA por segundos (o nó de
-# saúde tem timeout de 10s e o caminho casa->Kommo dá picos) — isso não é
-# queda real e o envio ao paciente (amojo) não falha nesses blips.
+# "clientes sem resposta". Mas a ponte de envio OSCILA por segundos (o nó de
+# saúde tem timeout e o caminho casa->internet dá picos) — isso não é
+# queda real e o envio ao paciente não falha nesses blips.
 # Agora só alerta em falha CONTÍNUA: pinga espaçado e qualquer recuperação
 # ZERA o contador; só avisa se ficar caído ininterrupto por ~NEED*STEP s.
 set -u
@@ -16,7 +16,7 @@ MODE="${VIGIA_MODE:-check}"
 STEP="${VIGIA_STEP_SECS:-15}"     # segundos entre pings
 NEED="${VIGIA_NEED_FAILS:-6}"     # falhas CONSECUTIVAS pra confirmar queda (6*15s = 90s)
 MAXP="${VIGIA_MAX_PINGS:-8}"      # teto de pings por rodada (não estourar o cron de 5min)
-# timeout por ping tem de ficar ACIMA do timeout do nó "Kommo Account" no n8n
+# timeout por ping tem de ficar ACIMA do timeout do nó de saúde no n8n
 # (20s desde 2026-07-17) — senão abortaríamos um ping lento-porém-ok como falha.
 PTMO="${VIGIA_PING_TIMEOUT:-25}"  # -m por ping (>20s do nó); connect curto p/ falha rápida de rede
 JCONT="$((NEED * STEP))"          # janela contínua exigida, em segundos
